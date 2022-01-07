@@ -32,3 +32,34 @@ steps:
   inputs:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+
+variables:
+  ARM_PASS: $(adminpass)
+
+trigger:
+- none
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: 'quickstarts/microsoft.web/webapp-basic-linux'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'ARMME'
+    subscriptionId: 'd1587f3b-4774-4f36-a4cc-6ed402c3b0e9' #Change for yours
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'ARMPipelinesDAVE-rg'
+    location: 'westeurope'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Build.ArtifactStagingDirectory)/azuredeploy.json'
+    csmParametersFile: '$(Build.ArtifactStagingDirectory)/azuredeploy.parameters.json'
+    overrideParameters: '-webAppName mytest123456'
+    #-administratorLogin $(adminUser) -administratorLoginPassword $(ARM_PASS)'
+    deploymentMode: 'Incremental'
